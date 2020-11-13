@@ -1,0 +1,78 @@
+@using Tesoro.Data
+@using Tesoro.Services
+
+@inject ITesoroService TS
+
+<div class="mr-2">
+
+
+<form @onsubmit="HandleSubmit" >
+    <label for="nombre">Nombre</label>
+    <input @bind-value="tesoro.Name" required type="text" name="nombre" id="nombre" class="form-control">
+    <label for="fecha">Fecha</label>
+    <input @bind-value="tesoro.Date" required type="date" name="fecha" id="fecha" class="form-control">
+    <label for="peso">Peso (Libras)</label>
+    <input @bind-value="tesoro.Weigth" required type="number" name="peso" id="peso" class="form-control">
+    <label for="valor">Valor</label>
+    <input @bind-value="tesoro.Value" required type="number" name="valor" id="valor" class="form-control">
+    <label for="lugar">Lugar</label>
+    <input @bind-value="tesoro.Place" required type="text" name="lugar" id="lugar" class="form-control">
+    <label for="lon">Longitud</label>
+    <input @bind-value="coord.Lng" required type="number" step="any" name="lon" id="lon" class="form-control">
+    <label for="lat">Latitud</label>
+    <input @bind-value="coord.Lat" required type="number" step="any" name="lat" id="lat" class="form-control">
+    <label for="iref">Imagen de Referencia</label>
+    <input @bind-value="tesoro.UrlRef" type="text" name="iref" id="iref" class="form-control">
+    <label for="descricion">Descripción</label>
+    <textarea @bind="tesoro.Description" required name="descripcion" id="descripcion" cols="30" rows="4" class="form-control"></textarea>
+    <br>
+    <input type="submit" value="Agregar" class="btn btn-success">
+</form>
+
+</div>
+
+@code 
+{
+    [Parameter]
+    public Guid Uid {get; set;}
+    private Treasure tesoro = new Treasure
+    {
+        Id = Guid.NewGuid(),
+        Date = DateTime.Today
+    };
+    private Coordinate coord = new Coordinate
+    {
+        Id = Guid.NewGuid()
+    };
+
+    private async Task HandleSubmit()
+    {
+        tesoro.Coordinates = coord;
+        var status = await TS.SetTreasure(tesoro);
+        if(status){
+            tesoro = new Treasure
+            {
+                Id = Guid.NewGuid(),
+                Date = DateTime.Today
+            };
+            coord = new Coordinate
+            {
+                Id = Guid.NewGuid()
+            };
+            StateHasChanged();
+        }
+        Console.WriteLine(status);    
+
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if(firstRender){
+            if(Uid != null){
+                coord.Tid = tesoro.Id;
+                coord.Uid = Uid;
+                tesoro.Uid = Uid;
+            }
+        }
+    }
+}
